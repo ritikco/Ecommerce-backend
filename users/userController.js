@@ -73,7 +73,9 @@ exports.signUp = async (req, res) => {
       statusCode: 200,
       success: true,
       message: "OTP sent successfully",
-      result: { email }
+      result: { email ,
+        otp
+       }
     });
 
   } catch (err) {
