@@ -19,7 +19,7 @@ exports.signUp = async (req, res) => {
     }
 
     // Check if phone already exists (in any user)
-    const phoneExists = await User.findOne({ phone });
+ const phoneExists = await User.findOne({ phone, otpVerified: true });
     if (phoneExists) {
       return res.send({
         statusCode: 409,
