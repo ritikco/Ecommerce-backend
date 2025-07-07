@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+    recentSearches: {
+    type: [String],  // array of strings
+    default: []
+  },
 resetSecurityToken: String,
 resetSecurityTokenExpires: Date,
 }, { timestamps: true });

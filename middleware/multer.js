@@ -25,7 +25,7 @@ const imageFileFilter = (req, file, cb) => {
 // ✅ Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // save all images inside /public/image
+    cb(null, uploadDir); 
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

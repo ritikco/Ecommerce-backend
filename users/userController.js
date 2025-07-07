@@ -2,6 +2,9 @@ const User = require('../users/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const Banner = require('../banner/bannerModel');
+const Category = require('../categories/categoryModel');
+const Product = require('../item/itemModel');
 
 
 exports.signUp = async (req, res) => {
@@ -375,3 +378,144 @@ exports.resetPassword = async (req, res) => {
     });
   }
 };
+
+exports.saveRecentSearch = async (req, res) => {
+  try {
+    const { search } = req.body;
+    const userId = req.token._id;
+
+    if (!search || typeof search !== 'string') {
+      return res.send({ 
+        statusCode : 400,
+         success: false,
+          message: 'Invalid search term',
+        result : {}
+       });
+    }
+
+    const user = await User.findById(userId);
+    if(!user){
+      return res.send({
+        statusCode : 400,
+        success :false ,
+        message : "user not found",
+        result : {}
+      })
+    }
+
+
+    let updatedSearches = user.recentSearches.filter(item => item !== search);
+    updatedSearches.unshift(search);
+
+
+    if (updatedSearches.length > 5) {
+      updatedSearches = updatedSearches.slice(0, 5);
+    }
+
+    user.recentSearches = updatedSearches;
+    await user.save();
+
+    res.send({
+      statusCode : 200,
+      success: true,
+      message: 'Recent search saved successfully',
+      data: user.recentSearches
+    });
+
+  } catch (error) {
+    console.error("Save Search Error:", error);
+    res.status(500).send({ success: false, message: 'Server error' });
+  }
+};
+
+
+exports.getDashboard = async (req, res) => {
+  try {
+    const userId = req.token._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "User not found",
+        result: {}
+      });
+    }
+
+    const { search } = req.body;
+
+    // ✅ Active banners
+    const banners = await Banner.find({ status: 'active' });
+
+    // ✅ Trending categories based on search
+    const categories = await Category.find({
+      isTrending: true,
+      name: { $regex: search, $options: 'i' }
+    });
+
+    // ✅ Searched products (based on current input)
+    const searchedProducts = await Product.find({
+      $or: [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ]
+    })
+      .select('name color_images ratings base_price')
+      .limit(10);
+
+    // ✅ Recent Category Products
+    let recentCategoryProducts = [];
+    if (user.recentCategoryId) {
+      recentCategoryProducts = await Product.find({
+        categoryId: user.recentCategoryId
+      })
+        .sort({ createdAt: -1 })
+        .select('name color_images ratings base_price')
+        .limit(10);
+    }
+
+    // ✅ Recent Search Products (from stored search terms)
+    let recentSearchProducts = [];
+
+    if (user.recentSearches && user.recentSearches.length > 0) {
+      recentSearchProducts = await Product.find({
+        $or: user.recentSearches.map(term => ({
+          name: { $regex: term, $options: 'i' }
+        }))
+      })
+        .select('name color_images ratings base_price')
+        .limit(10);
+    }
+
+    // ✅ New Arrivals
+    const newArrivals = await Product.find()
+      .sort({ createdAt: -1 })
+      .select('name image ratings price')
+      .limit(10);
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Dashboard data fetched successfully",
+      result: {
+        banners,
+        categories,
+        searchedProducts,
+        recentSearchProducts,
+        recentCategoryProducts,
+        newArrivals
+      }
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: "Internal server error",
+      result: error.message
+    });
+  }
+};
+
+

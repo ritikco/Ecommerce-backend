@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const pathRoutes = require('./path');
 const path = require('path');
 const cors = require('cors');
-
+require('dotenv').config();
 dotenv.config();
 
 
