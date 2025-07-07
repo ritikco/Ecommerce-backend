@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const pathRoutes = require('./path');
+const path = require('path');
 const cors = require('cors');
 
 dotenv.config();
@@ -14,6 +15,7 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json()); 
 app.use('/api', pathRoutes);
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 
 mongoose.connect(process.env.MONGODB_URI, {

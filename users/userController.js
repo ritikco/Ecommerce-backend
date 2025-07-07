@@ -311,12 +311,11 @@ exports.verifyResetOtp = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Verify Reset OTP error:', err);
     return res.send({
       statusCode: 500,
       success: false,
       message: "Server error during OTP verification",
-      result: {}
+      result: err.message
     });
   }
 };

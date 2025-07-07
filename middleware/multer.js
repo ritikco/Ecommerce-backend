@@ -2,16 +2,18 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create /uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, '..', 'public');
+// ✅ Upload directory inside public/image
+const uploadDir = path.join(__dirname, '..', 'public', 'image');
+
+// ✅ Create /public/image directory if it doesn't exist
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+  fs.mkdirSync(uploadDir, { recursive: true }); // recursive ensures parent folders are created
 }
 
-// Allowed image MIME types
+// ✅ Allowed image MIME types
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
-// Multer file filter function
+// ✅ Multer file filter
 const imageFileFilter = (req, file, cb) => {
   if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
     cb(null, true);
@@ -20,10 +22,10 @@ const imageFileFilter = (req, file, cb) => {
   }
 };
 
-// Multer disk storage configuration
+// ✅ Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); 
+    cb(null, uploadDir); // save all images inside /public/image
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -32,18 +34,21 @@ const storage = multer.diskStorage({
   }
 });
 
-// Create the multer instance
+// ✅ Multer upload instance
 const upload = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: {
-    fileSize: 2 * 1024 * 1024 // Max file size: 2MB
+    fileSize: 2 * 1024 * 1024 // Max 2MB
   }
 });
 
-// Export reusable middlewares
+const anyFilesUpload = upload.any();
+
+// ✅ Export middlewares
 module.exports = {
   parseFormData: upload.none(),
-  singleImageUpload: upload.single('profileImage'),
-  multipleImagesUpload: upload.array('images', 5)
+  singleImageUpload: upload.single('image'),
+  multipleImagesUpload: upload.array('images', 10),
+  anyFilesUpload
 };
