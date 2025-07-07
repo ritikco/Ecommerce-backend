@@ -321,6 +321,7 @@ const getProduct = async (req, res) => {
     };
     
     res.json({
+      statusCode : 200,
       success: true,
       data: responseData
     });
