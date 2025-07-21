@@ -13,5 +13,6 @@ router.post('/verify-reset-otp', parseFormData, userController.verifyResetOtp);
 router.post('/reset-password', parseFormData, userController.resetPassword);
 router.post('/get-dashboard', parseFormData,verifyToken , userController.getDashboard);
 router.post('/save-recentSearch', parseFormData,verifyToken , userController.saveRecentSearch);
+router.post('/update-recentCategory', parseFormData,verifyToken , userController.updateRecentCategory);
 
 module.exports = router;

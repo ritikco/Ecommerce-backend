@@ -41,6 +41,25 @@ const userSchema = new mongoose.Schema({
     type: [String],  // array of strings
     default: []
   },
+  // userModel.js
+
+recentCategoryHistory: [
+  {
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+    },
+    viewedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    count: {
+      type: Number,
+      default: 1,
+    },
+  }
+],
+
 resetSecurityToken: String,
 resetSecurityTokenExpires: Date,
 }, { timestamps: true });

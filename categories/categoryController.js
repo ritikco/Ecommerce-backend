@@ -21,7 +21,7 @@ exports.createCategory = async (req, res) => {
     const newCategory = new Category({
       name: name.trim(),
       image,
-      isTrending: isTrending === 'true' // convert string to boolean if needed
+      isTrending: isTrending === 'true' 
     });
 
     await newCategory.save();

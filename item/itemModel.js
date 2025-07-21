@@ -134,10 +134,14 @@ const productSchema = new mongoose.Schema({
     maxlength: 160
   },
   category: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category', 
     required: true
   },
-  subcategory: String,
+  subcategory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subcategory' 
+  },
   brand: String,
   base_price: {
     type: Number,

@@ -465,15 +465,30 @@ exports.getDashboard = async (req, res) => {
       .limit(10);
 
     // ✅ Recent Category Products
-    let recentCategoryProducts = [];
-    if (user.recentCategoryId) {
-      recentCategoryProducts = await Product.find({
-        categoryId: user.recentCategoryId
-      })
-        .sort({ createdAt: -1 })
-        .select('name color_images ratings base_price')
-        .limit(10);
-    }
+// ✅ Recent Category Products (from full recent history)
+let recentCategoryProducts = [];
+
+if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
+  const recentCategoryIds = user.recentCategoryHistory.map(item => item.categoryId);
+
+  recentCategoryProducts = await Product.find({
+    category: { $in: recentCategoryIds }
+  })
+    .sort({ createdAt: -1 })
+    .select('name color_images ratings base_price categoryId')
+    .limit(10)
+    .populate('category', 'name'); // Optional: to get category names
+}
+
+// ✅ Fetch recent categories separately
+let recentCategories = [];
+
+if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
+  const recentCategoryIds = user.recentCategoryHistory.map(item => item.categoryId);
+
+  recentCategories = await Category.find({ _id: { $in: recentCategoryIds } });
+}
+
 
     // ✅ Recent Search Products (from stored search terms)
     let recentSearchProducts = [];
@@ -504,6 +519,7 @@ exports.getDashboard = async (req, res) => {
         searchedProducts,
         recentSearchProducts,
         recentCategoryProducts,
+         recentCategories,
         newArrivals
       }
     });
@@ -518,4 +534,60 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
+exports.updateRecentCategory = async (req, res) => {
+  try {
+    const userId = req.token._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const { categoryId } = req.body;
+
+    if (!categoryId) {
+      return res.status(400).send({
+        success: false,
+        message: "categoryId is required",
+      });
+    }
+
+    const existing = user.recentCategoryHistory.find(
+      item => item.categoryId.toString() === categoryId.toString()
+    );
+
+    if (existing) {
+      existing.viewedAt = new Date();
+      existing.count += 1;
+    } else {
+      user.recentCategoryHistory.push({
+        categoryId,
+        viewedAt: new Date(),
+        count: 1,
+      });
+    }
+
+    // Sort by latest viewed and limit to last 5 entries
+    user.recentCategoryHistory.sort((a, b) => b.viewedAt - a.viewedAt);
+    user.recentCategoryHistory = user.recentCategoryHistory.slice(0, 5);
+
+    await user.save();
+
+    return res.status(200).send({
+      success: true,
+      message: "Recent category updated successfully",
+      recentCategoryHistory: user.recentCategoryHistory
+    });
+
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
 

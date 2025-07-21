@@ -183,10 +183,12 @@ exports.loginAdmin = async (req, res) => {
       });
     }
 
+    // console.log("hereeeee",process.env.JWT_SECRET);
+    
     // Generate JWT token valid for 30 days
     const token = jwt.sign(
       { id: admin._id, email : email},
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '30d' }
     );
 
