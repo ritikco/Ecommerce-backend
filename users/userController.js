@@ -506,7 +506,7 @@ if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
     // ✅ New Arrivals
     const newArrivals = await Product.find()
       .sort({ createdAt: -1 })
-      .select('name image ratings price')
+      .select('name color_images.primary_image ratings min_price')
       .limit(10);
 
     return res.send({
