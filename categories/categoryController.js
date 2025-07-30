@@ -3,13 +3,13 @@ const Admin = require('../admin/adminModel');
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, isTrending } = req.body;
+    const { name, isTrending ,allowedFilters} = req.body;
     const image = req.file?.filename; 
 
-    console.log(name , image , isTrending);
+    console.log(name , image , isTrending , allowedFilters);
     
 
-    if (!name || !image) {
+    if (!name || !image || !allowedFilters) {
       return res.status(400).send({
         statusCode: 400,
         success: false,
@@ -21,7 +21,8 @@ exports.createCategory = async (req, res) => {
     const newCategory = new Category({
       name: name.trim(),
       image,
-      isTrending: isTrending === 'true' 
+      isTrending: isTrending === 'true' ,
+      allowedFilters
     });
 
     await newCategory.save();

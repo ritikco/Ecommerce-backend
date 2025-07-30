@@ -9,5 +9,8 @@ const itemController = require('./itemController');
 router.post('/create-product', anyFilesUpload , verifyToken, itemController.addProduct);
 router.post('/get-product', anyFilesUpload , itemController.getProduct);
 
+router.post('/product-as-per-category', anyFilesUpload ,verifyToken, itemController.getProductAsPerCategory);
+router.post('/product-as-per-searching', anyFilesUpload ,verifyToken, itemController.fuzzySearchProducts);
+
 
 module.exports = router;

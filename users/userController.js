@@ -432,7 +432,7 @@ exports.saveRecentSearch = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     const userId = req.token._id;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("fullname email image");
 
     if (!user) {
       return res.send({
@@ -514,11 +514,11 @@ if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
       success: true,
       message: "Dashboard data fetched successfully",
       result: {
+        user,
         banners,
         categories,
         searchedProducts,
-        recentSearchProducts,
-        recentCategoryProducts,
+        Recommandation : recentSearchProducts,
          recentCategories,
         newArrivals
       }

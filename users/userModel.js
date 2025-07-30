@@ -41,8 +41,10 @@ const userSchema = new mongoose.Schema({
     type: [String],  // array of strings
     default: []
   },
-  // userModel.js
-
+    watchlist: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product"
+  }],
 recentCategoryHistory: [
   {
     categoryId: {
@@ -57,6 +59,7 @@ recentCategoryHistory: [
       type: Number,
       default: 1,
     },
+
   }
 ],
 

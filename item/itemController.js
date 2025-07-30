@@ -1,6 +1,9 @@
 const Product = require('./itemModel');
 const mongoose = require('mongoose');
-const slugify = require('slugify'); // npm install slugify
+const slugify = require('slugify'); 
+const User = require("../users/userModel")
+const Category = require("../categories/categoryModel");
+const Fuse = require("fuse.js");
 
 function buildColorImages(req) {
   const colorImages = {};
@@ -698,6 +701,159 @@ const getProductSummary = async (req, res) => {
   }
 };
 
+const getProductAsPerCategory = async (req, res) => {
+  try {
+    const userId = req.token._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "User not authorized",
+        result: {}
+      });
+    }
+
+    const { categoryId } = req.body;
+    if (!categoryId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "categoryId is required",
+        result: {}
+      });
+    }
+
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Category not found",
+        result: {}
+      });
+    }
+
+const query = {
+  category: categoryId
+};
+
+const allowedFilters = category.allowedFilters || [];
+
+for (const key of allowedFilters) {
+  const value = req.body[key];
+  if (value !== undefined && value !== "") {
+    if (["size", "color"].includes(key)) {
+
+      query["variants"] = {
+        $elemMatch: {
+          [key]: value
+        }
+      };
+    } else {
+      query[key] = value; 
+    }
+  }
+}
+
+    const products = await Product.find(query);
+
+    if (!products || products.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No products found for this category and filters",
+        result: {}
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Products fetched successfully",
+      result: { products }
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: "Internal server error",
+      result: error.message
+    });
+  }
+};
+
+const fuzzySearchProducts = async (req, res) => {
+  try {
+    const { query } = req.body;
+
+    if (!query || typeof query !== "string" || query.trim() === "") {
+      return res.status(400).send({
+        statusCode: 400,
+        success: false,
+        message: "Search query is required",
+        result: {}
+      });
+    }
+
+    // Fetch all products (you can optimize this for large datasets later)
+    const allProducts = await Product.find();
+
+    // Define the fields to apply fuzzy search
+const options = {
+  includeScore: true,
+  threshold: 0.4,
+  keys: [
+    "name",                     
+    "brand",                     
+    "description",               
+    "short_description",        
+    "tags",                      
+    "variants.size",            
+    "variants.color",           
+    "available_colors.color",   
+    "available_sizes.size"      
+  ]
+};
+
+
+    const fuse = new Fuse(allProducts, options);
+
+    // Perform fuzzy search
+    const results = fuse.search(query);
+
+    // Extract matched products
+    const matchedProducts = results.map(result => result.item);
+
+    if (!matchedProducts.length) {
+      return res.status(404).send({
+        statusCode: 404,
+        success: false,
+        message: "No similar products found for your search",
+        result: {}
+      });
+    }
+
+    return res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "Fuzzy matched products fetched successfully",
+      result: { products: matchedProducts }
+    });
+
+  } catch (error) {
+    console.error("Fuzzy search error:", error);
+    return res.status(500).send({
+      statusCode: 500,
+      success: false,
+      message: "Internal server error",
+      result: error.message
+    });
+  }
+};
+
 module.exports = {
   addProduct,
   getProduct,
@@ -705,5 +861,7 @@ module.exports = {
   addImagesToColor,
   updateImageOrder,
   deleteImage,
-  getProductSummary
+  getProductSummary,
+  getProductAsPerCategory,
+  fuzzySearchProducts
 };

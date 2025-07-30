@@ -8,6 +8,7 @@ const productRoutes =  require('./item/itemRoute');
 const bannerRoutes = require('./banner/bannerRoute');
 const subCategory = require("./subCategory/subCategoryRoutes");
 const cartRoute = require("./cart/cartRoute");
+const watchlistRoute = require("./users/watchListRoutes");
 
 
 
@@ -19,6 +20,7 @@ router.use('/product',productRoutes);
 router.use('/banner' , bannerRoutes);
 router.use('/subCategory' , subCategory);
 router.use('/cart',cartRoute);
+router.use('/watchlist',watchlistRoute);
 
 
 module.exports = router;

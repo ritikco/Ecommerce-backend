@@ -14,6 +14,10 @@ const categorySchema = new mongoose.Schema(
     isTrending: {
       type: Boolean,
       default: false
+    },
+      allowedFilters: {
+      type: [String], 
+      default: []
     }
   },
   { timestamps: true }
