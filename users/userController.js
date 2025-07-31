@@ -432,7 +432,10 @@ exports.saveRecentSearch = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     const userId = req.token._id;
-    const user = await User.findById(userId).select("fullname email image");
+    const user = await User.findById(userId).select("fullname email image")  .populate({
+    path: 'recentCategoryHistory.categoryId',
+    select: 'name image' 
+  });;
 
     if (!user) {
       return res.send({
@@ -480,14 +483,12 @@ if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
     .populate('category', 'name'); // Optional: to get category names
 }
 
-// ✅ Fetch recent categories separately
-let recentCategories = [];
 
-if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
-  const recentCategoryIds = user.recentCategoryHistory.map(item => item.categoryId);
 
-  recentCategories = await Category.find({ _id: { $in: recentCategoryIds } });
-}
+const recentCategories = user.recentCategoryHistory.map(item => item.categoryId);
+
+
+ 
 
 
     // ✅ Recent Search Products (from stored search terms)
@@ -517,9 +518,8 @@ if (user.recentCategoryHistory && user.recentCategoryHistory.length > 0) {
         user,
         banners,
         categories,
-        searchedProducts,
-        Recommandation : recentSearchProducts,
-         recentCategories,
+        Recommandation :searchedProducts,
+        recentCategories,
         newArrivals
       }
     });
